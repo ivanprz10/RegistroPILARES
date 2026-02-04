@@ -1,5 +1,5 @@
 // ==========================================
-// ⚠️ PEGA AQUÍ TU URL DE APPS SCRIPT
+// ⚠️ TU URL DE APPS SCRIPT
 // ==========================================
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-2PQFK8_Zy7BHtQtuBVxfeUXmzE4KMfrLmAzAZb0X9yQrIqQybhbrOZAzX7XwRndh/exec"; 
 
@@ -12,10 +12,8 @@ function mostrarNotificacion(mensaje, esError = false) {
   const barra = document.getElementById('notification-bar');
   const msg = document.getElementById('notif-msg');
   const icon = document.getElementById('notif-icon');
-  
   msg.innerText = mensaje;
   icon.innerText = esError ? "⚠️" : "✅";
-  
   barra.className = esError ? 'notif-error' : 'notif-success';
   barra.style.top = "0"; 
   setTimeout(() => { barra.style.top = "-100px"; }, 2500);
@@ -34,20 +32,40 @@ function mostrarVista(idVista) {
   setTimeout(() => { nueva.classList.add('active'); }, 10);
 }
 
+// --- FUNCION CRÍTICA: VOLVER AL INICIO (FORZADO) ---
+function volverInicio() {
+    // 1. Apagar cámara (Intentar pero no bloquear)
+    if (html5QrcodeScanner) {
+        try {
+            html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(e => {});
+        } catch(e) {}
+    }
+
+    // 2. Limpiar datos
+    document.getElementById('inputFolio').value = "";
+    document.getElementById('inputNombreNuevo').value = "";
+    
+    // 3. Cerrar overlay si está abierto
+    document.getElementById('overlay').style.display = "none";
+
+    // 4. Cambiar vista INMEDIATAMENTE
+    mostrarVista('viewMenu');
+}
+
+function volverAScan() {
+  mostrarVista('viewScan');
+  iniciarCamara();
+}
+
 // --- FLUJO ---
 function iniciarFlujo(modo) {
   datosFormulario = { modo: modo, folio: "", nombre: "", actividad: "" };
-  
-  document.getElementById('inputFolio').value = "";
-  document.getElementById('inputFolio').classList.remove('input-success');
-  document.getElementById('inputNombreNuevo').value = "";
-
   const btnSig = document.getElementById('btnSiguiente');
   const titulo = document.getElementById('tituloScan');
 
   if (modo === 'ENTRADA') {
     titulo.innerText = "Entrada";
-    btnSig.innerText = "BUSCAR / CONTINUAR ➡️";
+    btnSig.innerText = "CONTINUAR ➡️";
     btnSig.className = "btn-main bg-blue"; 
   } else {
     titulo.innerText = "Salida";
@@ -59,13 +77,15 @@ function iniciarFlujo(modo) {
   iniciarCamara();
 }
 
-// --- CAMARA ---
+// --- CAMARA (FRONTAL ACTIVADA) ---
 function iniciarCamara() {
   setTimeout(() => {
     if (!html5QrcodeScanner) { html5QrcodeScanner = new Html5Qrcode("reader"); }
     const config = { fps: 10, qrbox: { width: 300, height: 250 } };
+    
     try {
-        html5QrcodeScanner.start({ facingMode: "environment" }, config, 
+        // CAMBIO AQUÍ: "user" activa la cámara frontal
+        html5QrcodeScanner.start({ facingMode: "user" }, config, 
           (decodedText) => {
             const inputFolio = document.getElementById('inputFolio');
             if (inputFolio.value !== decodedText) {
@@ -75,12 +95,11 @@ function iniciarCamara() {
                 if (navigator.vibrate) navigator.vibrate(200);
             }
           }, () => {}
-        ).catch(err => console.log("Cámara ocupada"));
+        ).catch(err => console.log("Cámara ocupada o error de permisos"));
     } catch(e) {}
   }, 300);
 }
 
-// Detiene la cámara sin bloquear el flujo (Promesas silenciosas)
 function detenerCamara() {
   if (html5QrcodeScanner) {
       try {
@@ -102,7 +121,6 @@ function validarFolio() {
   inputFolio.classList.remove('input-error');
   datosFormulario.folio = folio;
 
-  // Si es Salida, terminamos aquí
   if (datosFormulario.modo === 'SALIDA') {
     datosFormulario.nombre = "-"; 
     datosFormulario.actividad = "-";
@@ -110,7 +128,6 @@ function validarFolio() {
     return;
   }
 
-  // Si es Entrada, buscamos
   detenerCamara();
   buscarUsuarioEnBaseDatos(folio);
 }
@@ -122,7 +139,6 @@ function buscarUsuarioEnBaseDatos(folio) {
     .then(response => response.json())
     .then(data => {
       mostrarOverlayCarga(false);
-      
       if (data.encontrado) {
         datosFormulario.nombre = data.nombre;
         document.getElementById('saludoUsuario').innerText = "Hola " + data.nombre + ", ¿a qué vienes?";
@@ -147,7 +163,6 @@ function guardarNombreYContinuar() {
     input.classList.add('input-error');
     return;
   }
-  
   datosFormulario.nombre = nombre;
   document.getElementById('saludoUsuario').innerText = "Hola " + nombre + ", ¿a qué vienes?";
   mostrarVista('viewActivity');
@@ -190,7 +205,7 @@ function irAMaterias(nombreBase, listaOpciones) {
   mostrarVista('viewModules');
 }
 
-// --- GESTIÓN DE OVERLAYS ---
+// --- OVERLAY GESTION ---
 function mostrarOverlayCarga(mostrar, titulo = "", mensaje = "") {
     const overlay = document.getElementById('overlay');
     const spinner = document.getElementById('loaderSpinner');
@@ -229,7 +244,7 @@ function mostrarOverlayExito(titulo, mensaje, alerta = false) {
     else container.classList.remove('alerta-salida');
 }
 
-// --- ENVÍO DE DATOS ---
+// --- ENVIO ---
 function enviarDatosGoogle() {
   mostrarOverlayCarga(true, "REGISTRANDO", "Guardando datos...");
   detenerCamara(); 
@@ -241,17 +256,16 @@ function enviarDatosGoogle() {
     body: JSON.stringify(datosFormulario)
   })
   .then(() => {
-    // Simular un pequeño retardo para que se vea el spinner
     setTimeout(() => {
         if (datosFormulario.modo === 'ENTRADA') {
             const msj = (datosFormulario.nombre !== "-") ? 
-                datosFormulario.nombre + "\nRecuerda tu SALIDA" : "Recuerda tu SALIDA";
+                datosFormulario.nombre + "\nRecuerda registrar tu SALIDA" : "Recuerda registrar tu SALIDA";
             mostrarOverlayExito("¡BIENVENIDO!", msj, true);
         } else {
             mostrarOverlayExito("¡HASTA LUEGO!", "Vuelve pronto.", false);
         }
         
-        // Loop de retorno seguro (Forzado)
+        // Loop de retorno SEGURO
         setTimeout(() => {
           volverInicio();
         }, 4000); 
@@ -262,24 +276,3 @@ function enviarDatosGoogle() {
     mostrarNotificacion("Error de conexión", true);
   });
 }
-
-// --- VOLVER AL INICIO (RESET AGRESIVO) ---
-function volverInicio() {
-  // 1. Apagar cámara (intento silencioso)
-  detenerCamara();
-
-  // 2. Limpiar formulario
-  document.getElementById('inputFolio').value = "";
-  document.getElementById('inputNombreNuevo').value = "";
-  
-  // 3. Forzar cierre de overlay
-  document.getElementById('overlay').style.display = "none";
-
-  // 4. Cambiar vista inmediatamente
-  mostrarVista('viewMenu');
-}
-
-function volverAScan() {
-  mostrarVista('viewScan');
-  iniciarCamara();
-}   
