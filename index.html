@@ -6,9 +6,7 @@
   <title>Registro PILARES</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
-  
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,81 +23,92 @@
   <main>
     
     <div id="viewMenu" class="view active">
-      <h2>BIENVENIDO</h2>
-      <p class="subtitle">Selecciona una opción</p>
-      <div class="tablet-row">
-        <button class="btn-main bg-green" onclick="iniciarFlujo('ENTRADA')">
-          <span style="font-size:3rem">➡️</span><span>ENTRADA</span>
-        </button>
-        <button class="btn-main bg-red" onclick="iniciarFlujo('SALIDA')">
-          <span style="font-size:3rem">⬅️</span><span>SALIDA</span>
-        </button>
+      <div class="center-content">
+        <h2>BIENVENIDO</h2>
+        <p class="subtitle">Selecciona una opción</p>
+        <div class="menu-row">
+          <button class="btn-main bg-green" onclick="iniciarFlujo('ENTRADA')">
+            <span style="font-size:4rem">➡️</span><span>ENTRADA</span>
+          </button>
+          <button class="btn-main bg-red" onclick="iniciarFlujo('SALIDA')">
+            <span style="font-size:4rem">⬅️</span><span>SALIDA</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <div id="viewScan" class="view">
-      <h2 id="tituloScan">Registro</h2>
-      <div class="camera-container"><div id="reader"></div></div>
-      
-      <div class="input-group">
-        <label>FOLIO</label>
-        <input type="text" id="inputFolio" placeholder="Escanea o escribe..." autocomplete="off">
-      </div>
+      <div class="split-container">
+        
+        <div class="split-left">
+          <h2 id="tituloScan">Registro</h2>
+          <div class="camera-container"><div id="reader"></div></div>
+        </div>
 
-      <div class="input-group" style="margin-top: 10px;">
-        <button id="btnSiguiente" class="btn-main bg-blue" style="height: 100px; font-size: 1.5rem;" onclick="validarFolio()">
-          CONTINUAR
-        </button>
+        <div class="split-right">
+          <div class="form-box">
+            <div class="input-group">
+              <label>FOLIO</label>
+              <input type="text" id="inputFolio" placeholder="Escanea o escribe..." autocomplete="off">
+            </div>
+            <div class="input-group">
+              <button id="btnSiguiente" class="btn-main bg-blue" onclick="validarFolio()">
+                CONTINUAR
+              </button>
+            </div>
+            <button class="fab-cancel-inline" onclick="volverInicio()">Cancelar</button>
+          </div>
+        </div>
+
       </div>
-      <button class="fab-cancel" onclick="volverInicio()">Cancelar</button>
     </div>
 
     <div id="viewNombre" class="view">
-      <h2>¡Hola!</h2>
-      <p class="subtitle">Es tu primera vez, escribe tu nombre</p>
-      <div class="input-group">
-        <label>NOMBRE COMPLETO</label>
-        <input type="text" id="inputNombreNuevo" placeholder="Tu nombre aquí" autocomplete="off">
+      <div class="center-content narrow">
+        <h2>¡Hola!</h2>
+        <p class="subtitle">Es tu primera vez, escribe tu nombre</p>
+        <div class="input-group">
+          <label>NOMBRE COMPLETO</label>
+          <input type="text" id="inputNombreNuevo" placeholder="Tu nombre aquí" autocomplete="off">
+        </div>
+        <div class="input-group">
+          <button class="btn-main bg-green" onclick="guardarNombreYContinuar()">
+            GUARDAR Y CONTINUAR
+          </button>
+        </div>
+        <button class="fab-cancel-inline" onclick="volverInicio()">Cancelar</button>
       </div>
-      <div class="input-group">
-        <button class="btn-main bg-green" style="height: 100px; font-size: 1.5rem;" onclick="guardarNombreYContinuar()">
-          GUARDAR Y CONTINUAR
-        </button>
-      </div>
-      <button class="fab-cancel" onclick="volverInicio()">Cancelar</button>
     </div>
 
     <div id="viewActivity" class="view">
-      <h2>Elige Actividad</h2>
+      <h2 style="margin-top: 10px;">Elige Actividad</h2>
       <p class="subtitle" id="saludoUsuario">Toca una opción</p>
       
       <div class="grid-container">
         <button class="btn-card b-blue" onclick="seleccionarActividad('Alfabetización')">
           <span class="icon">📝</span> Alfabetización
         </button>
-
         <button class="btn-card b-blue" onclick="seleccionarActividad('Computación')">
           <span class="icon">💻</span> Computación
         </button>
         <button class="btn-card b-blue" onclick="seleccionarActividad('Uso de computadora')">
           <span class="icon">⌨️</span> Uso de PC
         </button>
-        
         <button class="btn-card b-blue" onclick="seleccionarActividad('INEA Primaria')">
           <span class="icon">📘</span> INEA Primaria
         </button>
         <button class="btn-card b-blue" onclick="seleccionarActividad('INEA Secundaria')">
           <span class="icon">📗</span> INEA Secundaria
         </button>
-        
         <button class="btn-card b-orange" onclick="irAMaterias('Asesorías', ['Matemáticas', 'Español', 'Historia', 'Física', 'Biología', 'Química', 'Inglés'])">
           <span class="icon">🧑‍🏫</span> Asesorías<br><small>Materias</small>
         </button>
-
+        <button class="btn-card b-blue" onclick="seleccionarActividad('Curso ECOEMS')">
+          <span class="icon">📘</span> Curso ECOEMS
+        </button>
         <button class="btn-card b-purple" onclick="seleccionarActividad('Informes')">
           <span class="icon">ℹ️</span> Informes
         </button>
-
         <button class="btn-card b-orange" onclick="irAModulos('Prepa en Línea', 23)">
           <span class="icon">🎓</span> Prepa Línea<br><small>Módulos</small>
         </button>
@@ -109,11 +118,11 @@
         <button class="btn-card b-orange" onclick="irAModulos('Bachillerato', 9)">
           <span class="icon">🎓</span> Bachillerato<br><small>Módulos</small>
         </button>
-
         <button class="btn-card b-teal" onclick="seleccionarActividad('Servicio Social')">
           <span class="icon">🤝</span> Servicio Social
         </button>
       </div>
+      
       <button class="fab-cancel" onclick="volverAScan()">Atrás</button>
     </div>
 
